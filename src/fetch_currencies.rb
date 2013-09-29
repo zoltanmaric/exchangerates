@@ -6,6 +6,6 @@ puts 'Postgres DB password:'
 pass = STDIN.noecho(&:gets).chomp
 
 currs = Fetching.fetch_currencies
-conn = Storing.create_conn(pass)
+conn = Storing.connect(pass)
 Storing.update_currencies(conn, currs)
 conn.close
