@@ -18,4 +18,6 @@ selected = res['rates'].select { |code, rate| currs.include? code }
 conn = Storing.connect(pass)
 Storing.store_means(conn, base, selected, date)
 
+conn.close
+
 puts res
