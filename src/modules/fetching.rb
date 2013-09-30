@@ -60,6 +60,15 @@ module Fetching
 
 		return JSON.parse(res.body)
 	end
+
+	def self.fetch_prn
+		# See http://ruby-doc.org/stdlib-2.0.0/libdoc/net/http/rdoc/Net/HTTP.html
+		# for details on implementing a persistent connection
+		# for batch fetching.
+		uri = URI('http://www.zaba.hr/home/wps/PA_ZabaPublicSite/UtilServlet')
+		res = Net::HTTP.post_form(uri, :broj => 189, :godina => 2013, :isPdf => false)
+		return res.body
+	end
 end
 
 
