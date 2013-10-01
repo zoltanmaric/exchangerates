@@ -11,6 +11,14 @@ module Storing
 			"WHERE bases.cur_code = $3 " +
 			"AND targets.cur_code = $4"
 
+	STORE_RATES =
+		"INSERT INTO rates (rat_buy, rat_mean, rat_sell, rat_base_cur_id, rat_target_cur_id, rat_date) " +
+			"SELECT $1, $2, $3, bases.cur_id, targets.cur_id, $4 " +
+			"FROM currencies AS bases " +
+			"JOIN currencies AS targets ON 1=1 " +
+			"WHERE bases.cur_code = $5 " +
+			"AND targets.cur_code = $6"
+
 	# Returns a connection object to the Postgres database hosted
 	# at Heroku.
 	# Make sure to close the returned connection when done
@@ -38,6 +46,20 @@ module Storing
 	def self.store_means(conn, base, rates, date)
 		rates.each do |target, rate|
 			conn.exec_params(STORE_MEANS, [rate, date, base, target])
+		end
+	end
+
+	def self.store_rates(conn, base, rates, date)
+		rates.each do |target, rate|
+			conn.exec_params(STORE_RATES,
+				[
+					rate.buy,
+					rate.mean,
+					rate.sell,
+					date,
+					base,
+					target
+				])
 		end
 	end
 end
