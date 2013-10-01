@@ -2,6 +2,8 @@ require 'logger'
 require 'net/http'
 require 'json'
 
+require_relative 'parsing.rb'
+
 # Handles web service communication
 module Fetching
 	BASE_URL = 'http://openexchangerates.org/api/'
@@ -13,19 +15,48 @@ module Fetching
 
 	ZABA_URL = 'http://www.zaba.hr/home/wps/PA_ZabaPublicSite/UtilServlet'
 
-	@logger = Logger.new(STDOUT)
-	@logger.level = Logger::INFO
+	LOG = Logger.new(STDOUT)
+	LOG.level = Logger::DEBUG
 
-	def self.fetch_prn
-		# See http://ruby-doc.org/stdlib-2.0.0/libdoc/net/http/rdoc/Net/HTTP.html
-		# for details on implementing a persistent connection
-		# for batch fetching.
+	def self.prns(start_year, start_num)
+		curr_year = Time.new.year
+
+		prns = []
+
 		uri = URI(ZABA_URL)
-		res = Net::HTTP.post_form(uri,
-			:broj => 189,
-			:godina => 2013,
-			:isPdf => false)
-		return res.body
+		req = Net::HTTP::Post.new(ZABA_URL)
+		Net::HTTP.start(uri.host, uri.port) do |http|
+			num = start_num
+			(start_year..curr_year).each do |year|
+				while true
+					req.set_form_data(
+						:broj => num,
+						:godina => year,
+						:isPdf => false)
+					res = http.request(req)
+
+					# Check for response code. Throws exception if not 2xx.
+					res.value
+
+					LOG.debug("Received #{res.body}")
+
+					if (res.body.empty?)
+						# If no exchange rates table was found for the given
+						# num, an empty response is returned.
+						# It is assumed that this implies that no more
+						# exchange rates are available for the given year.
+						break
+					end
+
+					prns << Parsing.parse_prn(res.body)
+
+					num += 1
+				end
+				num = 0 # restart num for the subsequent year
+			end
+		end
+
+		return prns
 	end
 
 	# Fetches the currencies and returns them as a hash.
@@ -61,7 +92,7 @@ module Fetching
 	# Fetches JSON from the provided URL, parses it,
 	# and returns it as a hash.
 	def self.fetch_json(url_string)
-		@logger.info("Fetching #{url_string}")
+		LOG.info("Fetching #{url_string}")
 		url = URI.parse(url_string)
 		req = Net::HTTP::Get.new(url.to_s)
 		res = Net::HTTP.start(url.host, url.port) { |http|
@@ -70,7 +101,7 @@ module Fetching
 
 		res.value
 
-		@logger.debug("Received #{res.body}")
+		LOG.debug("Received #{res.body}")
 
 		return JSON.parse(res.body)
 	end
