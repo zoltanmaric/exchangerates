@@ -1,9 +1,9 @@
-load 'modules/fetching.rb'
-load 'modules/storing.rb'
+require 'modules/fetching.rb'
+require 'modules/storing.rb'
 require 'date'
 require 'yaml'
 
-CURRS = ['HRK', 'EUR', 'USD', 'CHF', 'GBP', 'AUD', 'CAD', 'BRL']
+CURRS = ['HRK', 'EUR', 'USD', 'CHF', 'GBP', 'AUD', 'CAD', 'BRL', 'JPY', 'DKK', 'NOK', 'SEK']
 PROPS = 'keys.yml'
 
 props = YAML.load_file(PROPS)

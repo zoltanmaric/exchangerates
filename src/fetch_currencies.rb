@@ -1,5 +1,5 @@
-load 'modules/fetching.rb'
-load 'modules/storing.rb'
+require 'modules/fetching.rb'
+require 'modules/storing.rb'
 require 'io/console'
 
 puts 'Postgres DB password:'
