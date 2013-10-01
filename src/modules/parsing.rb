@@ -3,14 +3,12 @@ require 'date'
 
 module Parsing
 	CODE_IDX = 1
-	COEF_IDX = 2
+	QUOT_IDX = 2
 	BUY_IDX = 4
 	MEAN_IDX = 5
-	SELL_IDX = 6
-	# The index of the sell rate when the mean rate is not specified.
-	SELL_IDX_NO_MEAN = 5
+	SELL_IDX = -2
 
-	DATE_IDX = 9
+	DATE_IDX = -1
 	DATE_FORMAT = '%d.%m.%Y.'.freeze
 
 	LOG = Logger.new(STDOUT)
@@ -42,28 +40,28 @@ module Parsing
 		end
 	end
 
-	def self.parse_prn(path)
+	def self.parse_prn(text)
 		date = nil
 		rates = {}
-		File.foreach(path) do |line|
+		text.lines.each do |line|
 			tokens = line.split
 
 			length = tokens.length
 			if length == 7 || length == 8
 				code = tokens[CODE_IDX]
-				buy = tokens[BUY_IDX]
+				quotient = BigDecimal(tokens[QUOT_IDX])
+				buy = BigDecimal(tokens[BUY_IDX]) / quotient
+				sell = BigDecimal(tokens[SELL_IDX]) / quotient
 
 				if length == 7
 					# No mean rate
 					mean = nil
-					sell = tokens[SELL_IDX_NO_MEAN]
 				else
-					mean = tokens[MEAN_IDX]
-					sell = tokens[SELL_IDX]
+					mean = BigDecimal(tokens[MEAN_IDX]) / quotient
 				end
 
 				rates[code] = Rate.new(buy, mean, sell)
-			elsif length == 10
+			elsif length > 8
 				LOG.debug(tokens[DATE_IDX])
 				date = Date.strptime(tokens[DATE_IDX], DATE_FORMAT)
 			end
