@@ -1,34 +1,34 @@
 require 'logger'
 require 'net/http'
 require 'json'
+require 'log4r'
 
 require_relative 'parsing.rb'
 
 # Handles web service communication
 module Fetching
-	BASE_URL = 'http://openexchangerates.org/api/'
-	CURRENCIES = 'currencies.json'
-	LATEST = 'latest.json'
-	HIST_PATH = 'historical/'
-	JSON_EXT = '.json'
-	APP_ID_Q = '?app_id='
+	@@BASE_URL = 'http://openexchangerates.org/api/'
+	@@CURRENCIES = 'currencies.json'
+	@@LATEST = 'latest.json'
+	@@HIST_PATH = 'historical/'
+	@@JSON_EXT = '.json'
+	@@APP_ID_Q = '?app_id='
 
-	ZABA_URL = 'http://www.zaba.hr/home/wps/PA_ZabaPublicSite/UtilServlet'
+	@@ZABA_URL = 'http://www.zaba.hr/home/wps/PA_ZabaPublicSite/UtilServlet'
 
-	LOG = Logger.new(STDOUT)
-	LOG.level = Logger::DEBUG
+	@@LOG = Log4r::Logger.get('info')
 
 	def self.prns(start_year, start_num)
 		curr_year = Time.new.year
 
 		prns = []
 
-		uri = URI(ZABA_URL)
-		req = Net::HTTP::Post.new(ZABA_URL)
+		uri = URI(@@ZABA_URL)
+		req = Net::HTTP::Post.new(@@ZABA_URL)
 		Net::HTTP.start(uri.host, uri.port) do |http|
 			num = start_num
 			(start_year..curr_year).each do |year|
-				while true
+				loop do
 					req.set_form_data(
 						:broj => num,
 						:godina => year,
@@ -38,7 +38,7 @@ module Fetching
 					# Check for response code. Throws exception if not 2xx.
 					res.value
 
-					LOG.debug("Received #{res.body}")
+					@@LOG.trace("Received #{res.body}")
 
 					if (res.body.empty?)
 						# If no exchange rates table was found for the given
@@ -63,14 +63,14 @@ module Fetching
 	# See https://openexchangerates.org/documentation for details
 	# on the layout of the hash.
 	def self.fetch_currencies
-		return fetch_json(BASE_URL + CURRENCIES)
+		return fetch_json(@@BASE_URL + @@CURRENCIES)
 	end
 
 	# Fetch the latest exchange rates as a hash.
 	# See https://openexchangerates.org/documentation for details
 	# on the layout of the hash.
 	def self.fetch_latest(app_id)
-		url_string = BASE_URL + LATEST + APP_ID_Q + app_id
+		url_string = @@BASE_URL + @@LATEST + @@APP_ID_Q + app_id
 		return fetch_json(url_string)
 	end
 
@@ -84,15 +84,15 @@ module Fetching
 			date_string = date
 		end
 
-		url_string = BASE_URL + HIST_PATH +
-			date_string + JSON_EXT + APP_ID_Q + app_id
+		url_string = @@BASE_URL + @@HIST_PATH +
+			date_string + @@JSON_EXT + @@APP_ID_Q + app_id
 		return fetch_json(url_string)
 	end
 
 	# Fetches JSON from the provided URL, parses it,
 	# and returns it as a hash.
 	def self.fetch_json(url_string)
-		LOG.info("Fetching #{url_string}")
+		@@LOG.info("Fetching #{url_string}")
 		url = URI.parse(url_string)
 		req = Net::HTTP::Get.new(url.to_s)
 		res = Net::HTTP.start(url.host, url.port) { |http|
@@ -101,7 +101,7 @@ module Fetching
 
 		res.value
 
-		LOG.debug("Received #{res.body}")
+		@@LOG.debug("Received #{res.body}")
 
 		return JSON.parse(res.body)
 	end

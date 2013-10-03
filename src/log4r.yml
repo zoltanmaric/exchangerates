@@ -1,0 +1,19 @@
+---
+log4r_config:
+  loggers:
+    - name: debug
+      level: DEBUG
+      outputters:
+        - default
+    - name: info
+      level: INFO
+      outputters:
+        - default
+  outputters:
+    - name: default
+      type: StdoutOutputter
+      default: true
+      formatter:
+        type: PatternFormatter
+        date_pattern: '%H:%M:%S'
+        pattern: '[%l] %d: %m'

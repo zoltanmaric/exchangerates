@@ -2,17 +2,16 @@ require 'logger'
 require 'date'
 
 module Parsing
-	CODE_IDX = 1
-	QUOT_IDX = 2
-	BUY_IDX = 4
-	MEAN_IDX = 5
-	SELL_IDX = -2
+	@@CODE_IDX = 1
+	@@QUOT_IDX = 2
+	@@BUY_IDX = 4
+	@@MEAN_IDX = 5
+	@@SELL_IDX = -2	# The second from the end
 
-	DATE_IDX = -1
-	DATE_FORMAT = '%d.%m.%Y.'.freeze
+	@@DATE_IDX = -1
+	@@DATE_FORMAT = '%d.%m.%Y.'.freeze
 
-	LOG = Logger.new(STDOUT)
-	LOG.level = Logger::DEBUG
+	@@LOG = Log4r::Logger.get('info')
 
 	class Rate
 		attr_reader :buy
@@ -48,22 +47,22 @@ module Parsing
 
 			length = tokens.length
 			if length == 7 || length == 8
-				code = tokens[CODE_IDX]
-				quotient = BigDecimal(tokens[QUOT_IDX])
-				buy = BigDecimal(tokens[BUY_IDX]) / quotient
-				sell = BigDecimal(tokens[SELL_IDX]) / quotient
+				code = tokens[@@CODE_IDX]
+				quotient = BigDecimal(tokens[@@QUOT_IDX])
+				buy = BigDecimal(tokens[@@BUY_IDX]) / quotient
+				sell = BigDecimal(tokens[@@SELL_IDX]) / quotient
 
 				if length == 7
 					# No mean rate
 					mean = nil
 				else
-					mean = BigDecimal(tokens[MEAN_IDX]) / quotient
+					mean = BigDecimal(tokens[@@MEAN_IDX]) / quotient
 				end
 
 				rates[code] = Rate.new(buy, mean, sell)
 			elsif length > 8
-				LOG.debug(tokens[DATE_IDX])
-				date = Date.strptime(tokens[DATE_IDX], DATE_FORMAT)
+				@@LOG.debug(tokens[@@DATE_IDX])
+				date = Date.strptime(tokens[@@DATE_IDX], @@DATE_FORMAT)
 			end
 		end
 
