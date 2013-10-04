@@ -24,13 +24,14 @@ module Storing
 	# Make sure to close the returned connection when done
 	# communicating with the DB
 	def self.connect(password)
-		conn = PGconn.connect(
+		PGconn.connect(
 			:host => 'ec2-54-228-233-186.eu-west-1.compute.amazonaws.com',
 			:port => 5432,
 			:dbname => 'd8odrvi88ngso9',
 			:user => 'omujuxwxphgjhk',
-			:password => password)
-		return conn
+			:password => password) do |conn|
+			yield(conn)
+		end
 	end
 
 	# Updates or inserts the given currencies in the database

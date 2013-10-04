@@ -18,8 +18,10 @@ module Fetching
 
 	@@LOG = Log4r::Logger.get('info')
 
-	def self.prns(start_year, start_num)
-		curr_year = Time.new.year
+	def self.prns(start_year, start_num, end_year=nil, end_num=nil)
+		unless end_year
+			end_year = Time.new.year
+		end
 
 		prns = []
 
@@ -27,8 +29,8 @@ module Fetching
 		req = Net::HTTP::Post.new(@@ZABA_URL)
 		Net::HTTP.start(uri.host, uri.port) do |http|
 			num = start_num
-			(start_year..curr_year).each do |year|
-				loop do
+			(start_year..end_year).each do |year|
+				until end_year == year && end_num == num - 1
 					req.set_form_data(
 						:broj => num,
 						:godina => year,
@@ -38,21 +40,19 @@ module Fetching
 					# Check for response code. Throws exception if not 2xx.
 					res.value
 
-					@@LOG.trace("Received #{res.body}")
+					@@LOG.debug("Received #{res.body}")
 
-					if (res.body.empty?)
-						# If no exchange rates table was found for the given
-						# num, an empty response is returned.
-						# It is assumed that this implies that no more
-						# exchange rates are available for the given year.
-						break
-					end
+					# If no exchange rates table was found for the given
+					# num, an empty response is returned.
+					# It is assumed that this implies that no more
+					# exchange rates are available for the given year.
+					break if res.body.empty?
 
 					prns << Parsing.parse_prn(res.body)
 
 					num += 1
 				end
-				num = 0 # restart num for the subsequent year
+				num = 1 # restart num for the subsequent year
 			end
 		end
 

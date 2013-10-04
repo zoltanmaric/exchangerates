@@ -11,20 +11,26 @@ require_relative 'modules/parsing.rb'
 LOG = Log4r::Logger.get('info')
 PROPS = 'keys.yml'
 
-unless ARGV.length == 2
-	LOG.info("Usage: ruby #{$0} start_year start_num. Exiting.")
+unless ARGV.length >= 2 || ARGV.length <= 4
+	LOG.info("Usage: ruby #{$0} start_year start_num [end_year [end_num]]. " +
+		"Exiting.")
 	exit!
 end
 
 start_year = ARGV[0].to_i
 start_num = ARGV[1].to_i
+end_year = ARGV[2].to_i
+end_num = ARGV[3].to_i
 
 props = YAML.load_file(PROPS)
 pass = props['db_pass']
 
+end_message = end_year ? end_year.to_s : 'today'
+end_message += end_num ? " \##{end_num}" : ''
+
 LOG.info("Fetching exchange rates from #{start_year} " +
-	"\##{start_num} until today.")
-prns = Fetching.prns(start_year, start_num)
+	"\##{start_num} until #{end_message}.")
+prns = Fetching.prns(start_year, start_num, end_year, end_num)
 
 LOG.info("Fetched and parsed #{prns.length} files.")
 
@@ -36,8 +42,7 @@ if LOG.debug?
 end
 
 base = 'HRK'
-conn = Storing.connect(pass)
-begin
+Storing.connect(pass) do |conn|
 	prns.each do |prn|
 		begin
 			LOG.debug("Storing rates for #{prn.date}")
@@ -48,6 +53,4 @@ begin
 			LOG.error("While persisting rates for #{prn.date}", e)
 		end
 	end
-ensure
-	conn.close
 end
