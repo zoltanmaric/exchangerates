@@ -3,10 +3,10 @@ require 'controller'
 module UI
 	@@LOG = Log4r::Logger.get('info')
 
-	@@STATS = 1
-	@@FETCH_RATES = 2
-	@@FETCH_HIST_RATES = 3
-	@@QUIT = 0
+	@@STATS = "1"
+	@@FETCH_RATES = "2"
+	@@FETCH_HIST_RATES = "3"
+	@@QUIT = "0"
 
 	def self.start_app(app_id, db_pass)
 		begin
@@ -16,7 +16,7 @@ module UI
 			puts "#{@@FETCH_RATES}: Fetch latest rates"
 			puts "#{@@FETCH_HIST_RATES}: Fetch historical rates"
 			puts "#{@@QUIT}: Quit"
-			action = gets.chomp.to_i
+			action = gets.chomp
 			act(db_pass, action)
 		end until action == @@QUIT
 	end
@@ -33,6 +33,8 @@ module UI
 			fetch_rates(db_pass, false)
 		when @@FETCH_HIST_RATES
 			fetch_rates(db_pass, true)
+		else
+			puts "Command not recognized."
 		end
 
 	end
