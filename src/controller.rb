@@ -1,7 +1,7 @@
 require 'log4r'
 
 require 'fetching'
-require 'storing'
+require 'db'
 
 module Controller
 	@@LOG = Log4r::Logger.get('info')
@@ -28,11 +28,11 @@ module Controller
 
 		base = 'HRK'
 		success_count = 0
-		Storing.connect(db_pass) do |conn|
+		DB.connect(db_pass) do |conn|
 			prns.each do |prn|
 				begin
 					@@LOG.debug("Storing rates for #{prn.date}")
-					Storing.store_rates(conn, base, prn.rates, prn.date)
+					DB.store_rates(conn, base, prn.rates, prn.date)
 					success_count += 1
 				rescue PG::UniqueViolation => e
 					@@LOG.info("While persisting rates for #{prn.date}: #{e.message}")
@@ -53,15 +53,15 @@ module Controller
 			@@CURRS_OER.include? code
 		end
 
-		conn = Storing.connect(db_pass)
-		Storing.store_means(conn, base, selected, date)
+		conn = DB.connect(db_pass)
+		DB.store_means(conn, base, selected, date)
 		conn.close
 	end
 
 	def self.fetch_currencies_oer(db_pass)
 		currs = Fetching.fetch_currencies
-		conn = Storing.connect(db_pass)
-		Storing.update_currencies(conn, currs)
+		conn = DB.connect(db_pass)
+		DB.update_currencies(conn, currs)
 		conn.close
 	end
 end

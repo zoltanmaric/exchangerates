@@ -2,7 +2,7 @@ require 'pg'
 require 'date'	# required by upsert (lame)
 require 'upsert'
 
-module Storing
+module DB
 	@@STORE_MEANS =
 		"INSERT INTO rates (rat_mean, rat_base_cur_id, rat_target_cur_id, rat_date) " +
 			"SELECT $1, bases.cur_id, targets.cur_id, $2 " +
