@@ -32,7 +32,7 @@ LOG.info("Fetching exchange rates from #{start_year} " +
 	"\##{start_num} until #{end_message}.")
 prns = Fetching.prns(start_year, start_num, end_year, end_num)
 
-LOG.info("Fetched and parsed #{prns.length} files.")
+LOG.info("Fetched and parsed #{prns.length} PRN files.")
 
 
 if LOG.debug?

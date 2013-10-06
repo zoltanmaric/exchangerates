@@ -3,7 +3,7 @@ require 'net/http'
 require 'json'
 require 'log4r'
 
-require_relative 'parsing.rb'
+require 'parsing'
 
 # Handles web service communication
 module Fetching
