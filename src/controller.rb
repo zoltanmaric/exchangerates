@@ -27,11 +27,13 @@ module Controller
 		end
 
 		base = 'HRK'
+		success_count = 0
 		Storing.connect(db_pass) do |conn|
 			prns.each do |prn|
 				begin
 					@@LOG.debug("Storing rates for #{prn.date}")
 					Storing.store_rates(conn, base, prn.rates, prn.date)
+					success_count += 1
 				rescue PG::UniqueViolation => e
 					@@LOG.info("While persisting rates for #{prn.date}: #{e.message}")
 				rescue Exception => e
@@ -39,6 +41,8 @@ module Controller
 				end
 			end
 		end
+
+		@@LOG.info("#{success_count} record(s) stored successfully.")
 	end
 
 	def self.fetch_rates_oer(app_id, db_pass, date)
