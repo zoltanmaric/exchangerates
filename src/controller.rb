@@ -8,7 +8,7 @@ module Controller
 	@@CURRS_OER = ['HRK', 'EUR', 'USD', 'CHF', 'GBP',
 		'AUD', 'CAD', 'BRL', 'JPY', 'DKK', 'NOK', 'SEK']
 
-	def self.fetch_rates_zaba(db_pass, start_year, start_num,
+	def self.fetch_rates_zaba(db_conn, start_year, start_num,
 			end_year = nil, end_num = nil)
 		end_message = end_year ? end_year.to_s : 'today'
 		end_message += end_num ? " \##{end_num}" : ''
@@ -28,37 +28,33 @@ module Controller
 
 		base = 'HRK'
 		success_count = 0
-		DB.connect(db_pass) do |conn|
-			prns.each do |prn|
-				begin
-					@@LOG.debug("Storing rates for #{prn.date}")
-					DB.store_rates(conn, base, prn.rates, prn.date)
-					success_count += 1
-				rescue PG::UniqueViolation => e
-					@@LOG.info("While persisting rates for #{prn.date}: #{e.message}")
-				rescue Exception => e
-					@@LOG.error("While persisting rates for #{prn.date}", e)
-				end
+		prns.each do |prn|
+			begin
+				@@LOG.debug("Storing rates for #{prn.date}")
+				DB.store_rates(db_conn, base, prn.rates, prn.date)
+				success_count += 1
+			rescue PG::UniqueViolation => e
+				@@LOG.info("While persisting rates for #{prn.date}: #{e.message}")
+			rescue Exception => e
+				@@LOG.error("While persisting rates for #{prn.date}", e)
 			end
 		end
 
 		@@LOG.info("#{success_count} record(s) stored successfully.")
 	end
 
-	def self.period_stats(db_pass, periods_months)
+	def self.period_stats(db_conn, periods_months)
 		stats_months = {}
-		DB.connect(db_pass) do |conn|
-			periods_months.each do |months|
-				start_date = Date.today << months
-				@@LOG.info("Fetching stats since #{start_date}.")
-				stats_months[months] = DB.get_stats(conn, start_date)
-			end
+		periods_months.each do |months|
+			start_date = Date.today << months
+			@@LOG.info("Fetching stats since #{start_date}.")
+			stats_months[months] = DB.get_stats(db_conn, start_date)
 		end
 
 		return stats_months
 	end
 
-	def self.fetch_rates_oer(app_id, db_pass, date)
+	def self.fetch_rates_oer(app_id, db_conn, date)
 		res = Fetching.fetch_historical(app_id, date)
 		base = res['base']
 		# Extract only the currencies found in @@CURRS_OER.
@@ -66,15 +62,11 @@ module Controller
 			@@CURRS_OER.include? code
 		end
 
-		conn = DB.connect(db_pass)
-		DB.store_means(conn, base, selected, date)
-		conn.close
+		DB.store_means(db_conn, base, selected, date)
 	end
 
-	def self.fetch_currencies_oer(db_pass)
+	def self.fetch_currencies_oer(db_conn)
 		currs = Fetching.fetch_currencies
-		conn = DB.connect(db_pass)
-		DB.update_currencies(conn, currs)
-		conn.close
+		DB.update_currencies(db_conn, currs)
 	end
 end
