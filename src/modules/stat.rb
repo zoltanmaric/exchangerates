@@ -9,7 +9,6 @@ class Stat
 
 	def initialize(min_sell, max_buy, avg_sell,
 			avg_buy, max_sell, min_buy)
-		@currency = currency
 		@min_sell = min_sell
 		@max_buy = max_buy
 		@avg_sell = avg_sell

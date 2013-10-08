@@ -1,4 +1,4 @@
-#
+# Contains exchange rate information for a single currency.
 class Rate
 	attr_reader :buy
 	attr_reader :sell

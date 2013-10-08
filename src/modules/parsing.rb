@@ -1,5 +1,6 @@
 require 'logger'
 require 'date'
+require 'rate'
 
 module Parsing
 	@@CODE_IDX = 1
@@ -12,18 +13,6 @@ module Parsing
 	@@DATE_FORMAT = '%d.%m.%Y.'.freeze
 
 	@@LOG = Log4r::Logger.get('info')
-
-	class Rate
-		attr_reader :buy
-		attr_reader :sell
-		attr_reader :mean
-
-		def initialize(buy, mean, sell)
-			@buy = buy
-			@mean = mean
-			@sell = sell
-		end
-	end
 
 	# Contains parsed data from a single .prn file.
 	class Prn

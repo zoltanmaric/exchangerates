@@ -1,8 +1,11 @@
 require 'pg'
 require 'date'	# required by upsert (lame)
 require 'upsert'
+require 'stat'
 
 module DB
+	@@LOG = Log4r::Logger.get('info')
+
 	@@STORE_MEANS =
 		"INSERT INTO rates (rat_mean, rat_base_cur_id, rat_target_cur_id, rat_date) " +
 			"SELECT $1, bases.cur_id, targets.cur_id, $2 " +
@@ -24,7 +27,7 @@ module DB
 			avg(rat_sell) AS avg_sell, avg(rat_buy) AS avg_buy,
 			max(rat_sell) AS max_sell, min(rat_buy) AS min_buy
 			FROM rates JOIN currencies ON rat_target_cur_id = cur_id
-			WHERE rat_date >= now()::date - INTERVAL '$1 months'
+			WHERE rat_date >= $1
 			GROUP BY cur_code
 			ORDER BY cur_code"
 
@@ -34,12 +37,14 @@ module DB
 	# Make sure to close the returned connection when done
 	# communicating with the DB
 	def self.connect(password)
+		@@LOG.info("Connecting to database...")
 		PGconn.connect(
 			:host => 'ec2-54-228-233-186.eu-west-1.compute.amazonaws.com',
 			:port => 5432,
 			:dbname => 'd8odrvi88ngso9',
 			:user => 'omujuxwxphgjhk',
 			:password => password) do |conn|
+			@@LOG.info("Connected.")
 			yield(conn)
 		end
 	end
@@ -58,8 +63,24 @@ module DB
 		end
 	end
 
-	def self.get_stats(conn, months)
-		results = 
+	def self.get_stats(conn, start_date)
+		param = start_date.to_s
+		results = conn.exec_params(@@GET_STATS, [param])
+		stats = {}
+		results.each do |result|
+			@@LOG.debug("Result: #{result}")
+			stats[result['cur_code']] = Stat.new(
+				result['min_sell'].to_f,
+				result['max_buy'].to_f,
+				result['avg_sell'].to_f,
+				result['avg_buy'].to_f,
+				result['max_sell'].to_f,
+				result['min_buy'].to_f
+				)
+		end
+		@@LOG.debug("Stats: #{stats}")
+
+		return stats
 	end
 
 	# Updates or inserts the given currencies in the database

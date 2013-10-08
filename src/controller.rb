@@ -45,6 +45,19 @@ module Controller
 		@@LOG.info("#{success_count} record(s) stored successfully.")
 	end
 
+	def self.period_stats(db_pass, periods_months)
+		stats_months = {}
+		DB.connect(db_pass) do |conn|
+			periods_months.each do |months|
+				start_date = Date.today << months
+				@@LOG.info("Fetching stats since #{start_date}.")
+				stats_months[months] = DB.get_stats(conn, start_date)
+			end
+		end
+
+		return stats_months
+	end
+
 	def self.fetch_rates_oer(app_id, db_pass, date)
 		res = Fetching.fetch_historical(app_id, date)
 		base = res['base']

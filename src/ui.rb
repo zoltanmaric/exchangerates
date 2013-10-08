@@ -8,6 +8,8 @@ module UI
 	@@FETCH_HIST_RATES = "3"
 	@@QUIT = "0"
 
+	@@PERIODS_MONTHS = [1, 6, 12, 24]
+
 	def self.start_app(app_id, db_pass)
 		begin
 			puts
@@ -28,7 +30,7 @@ module UI
 		when @@QUIT
 			puts "Exiting."
 		when @@STATS
-			puts "Not implemented yet."
+			stats(db_pass)
 		when @@FETCH_RATES
 			fetch_rates(db_pass, false)
 		when @@FETCH_HIST_RATES
@@ -37,6 +39,35 @@ module UI
 			puts "Command not recognized."
 		end
 
+	end
+
+	def self.stats(db_pass)
+		period_stats = Controller.period_stats(db_pass, @@PERIODS_MONTHS)
+		period_stats.each do |months, stats|
+			puts
+			puts "Stats for #{months} month(s):"
+			puts "-" * 74
+			print "Currency | Min sell | "
+			print "Max buy".ljust(8) + " | "
+			print "Avg sell | "
+			print "Avg buy".ljust(8) + " | "
+			print "Max sell | "
+			puts "Min buy".ljust(8)
+			puts "=" * 74
+
+			stats.each do |cur, stat|
+				print "#{cur}".ljust(8) + " | "
+				print "#{stat.min_sell.round(6)}".ljust(8) + " | "
+				print "#{stat.max_buy.round(6)}".ljust(8) + " | "
+				print "#{stat.avg_sell.round(6)}".ljust(8) + " | "
+				print "#{stat.avg_buy.round(6)}".ljust(8) + " | "
+				print "#{stat.max_sell.round(6)}".ljust(8) + " | "
+				puts stat.min_buy.round(6)
+			end
+			puts
+			puts "Press RETURN to continue..."
+			gets
+		end
 	end
 
 	def self.fetch_rates(db_pass, hist)
