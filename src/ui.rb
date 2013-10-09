@@ -9,7 +9,7 @@ module UI
 	@@FETCH_HIST_RATES = "3"
 	@@QUIT = "0"
 
-	@@PERIODS_MONTHS = [1, 6, 12, 24]
+	@@PERIODS_MONTHS = [24, 12, 6, 1]
 
 	def self.start_app(app_id, db_pass)
 		DB.connect(db_pass) do |db_conn|
@@ -49,23 +49,22 @@ module UI
 		period_stats.each do |months, stats|
 			puts
 			puts "Stats for #{months} month(s):"
-			puts "-" * 74
-			print "Currency | Min sell | "
-			print "Max buy".ljust(8) + " | "
+			puts "-" * 82
+			print "Currency | Latest sell | Min sell | "
 			print "Avg sell | "
 			print "Avg buy".ljust(8) + " | "
-			print "Max sell | "
-			puts "Min buy".ljust(8)
-			puts "=" * 74
+			print "Max buy".ljust(8) + " | "
+			puts "Latest sell | "
+			puts "=" * 82
 
 			stats.each do |cur, stat|
 				print "#{cur}".ljust(8) + " | "
+				print "#{stat.latest_sell.round(6)}".ljust(11) + " | "
 				print "#{stat.min_sell.round(6)}".ljust(8) + " | "
-				print "#{stat.max_buy.round(6)}".ljust(8) + " | "
 				print "#{stat.avg_sell.round(6)}".ljust(8) + " | "
 				print "#{stat.avg_buy.round(6)}".ljust(8) + " | "
-				print "#{stat.max_sell.round(6)}".ljust(8) + " | "
-				puts stat.min_buy.round(6)
+				print "#{stat.max_buy.round(6)}".ljust(8) + " | "
+				puts "#{stat.latest_buy.round(6)}".ljust(11) + " |"
 			end
 			puts
 			puts "Press RETURN to continue..."

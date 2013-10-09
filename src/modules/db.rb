@@ -22,13 +22,30 @@ module DB
 			"WHERE bases.cur_code = $5 " +
 			"AND targets.cur_code = $6"
 
-	@@GET_STATS =
-		"SELECT cur_code, min(rat_sell) AS min_sell, max(rat_buy) AS max_buy,
-			avg(rat_sell) AS avg_sell, avg(rat_buy) AS avg_buy,
-			max(rat_sell) AS max_sell, min(rat_buy) AS min_buy
+	@@GET_RATES =
+		"SELECT cur_code, rat_sell, rat_buy
 			FROM rates JOIN currencies ON rat_target_cur_id = cur_id
+			ORDER BY rat_date, cur_code
+			LIMIT "
+
+	@@GET_STATS =
+		"WITH latest AS (
+			SELECT rat_sell AS latest_sell,
+				rat_buy AS latest_buy,
+				rat_target_cur_id AS latest_cur_id
+				FROM rates
+				WHERE rat_date =
+				(SELECT rat_date FROM rates
+					ORDER BY rat_date DESC LIMIT 1)
+		)
+		SELECT cur_code, latest_sell, min(rat_sell) AS min_sell,
+			avg(rat_sell) AS avg_sell, avg(rat_buy) AS avg_buy,
+			max(rat_buy) AS max_buy, latest_buy
+			FROM rates
+			JOIN latest ON rat_target_cur_id = latest_cur_id
+			JOIN currencies ON rat_target_cur_id = cur_id
 			WHERE rat_date >= $1
-			GROUP BY cur_code
+			GROUP BY cur_code, latest_sell, latest_buy
 			ORDER BY cur_code"
 
 
@@ -70,13 +87,13 @@ module DB
 		results.each do |result|
 			@@LOG.debug("Result: #{result}")
 			stats[result['cur_code']] = Stat.new(
+				result['latest_sell'].to_f,
 				result['min_sell'].to_f,
-				result['max_buy'].to_f,
 				result['avg_sell'].to_f,
 				result['avg_buy'].to_f,
-				result['max_sell'].to_f,
-				result['min_buy'].to_f
-				)
+				result['max_buy'].to_f,
+				result['latest_buy'].to_f
+			)
 		end
 		@@LOG.debug("Stats: #{stats}")
 
