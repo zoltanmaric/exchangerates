@@ -39,8 +39,9 @@ module DB
 					ORDER BY rat_date DESC LIMIT 1)
 		)
 		SELECT cur_code, latest_sell, min(rat_sell) AS min_sell,
-			avg(rat_sell) AS avg_sell, avg(rat_buy) AS avg_buy,
-			max(rat_buy) AS max_buy, latest_buy
+				avg(rat_sell) AS avg_sell, max(rat_sell) AS max_sell,
+				min(rat_buy) AS min_buy, avg(rat_buy) AS avg_buy,
+				max(rat_buy) AS max_buy, latest_buy
 			FROM rates
 			JOIN latest ON rat_target_cur_id = latest_cur_id
 			JOIN currencies ON rat_target_cur_id = cur_id
@@ -90,6 +91,8 @@ module DB
 				result['latest_sell'].to_f,
 				result['min_sell'].to_f,
 				result['avg_sell'].to_f,
+				result['max_sell'].to_f,
+				result['min_buy'].to_f,
 				result['avg_buy'].to_f,
 				result['max_buy'].to_f,
 				result['latest_buy'].to_f

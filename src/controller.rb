@@ -2,6 +2,7 @@ require 'log4r'
 
 require 'fetching'
 require 'db'
+require 'perc'
 
 module Controller
 	@@LOG = Log4r::Logger.get('info')
@@ -54,6 +55,33 @@ module Controller
 		return stats_months
 	end
 
+	def self.to_percs_months(stats_months)
+		percs_months = {}
+		stats_months.each do |months, stats|
+			percs_months[months] = {}
+			stats.each do |cur, stat|
+				percs_months[months][cur] = {}
+			# selling:
+				latest_sell = stat.latest_sell
+				worst_buy = perc_diff(stat.min_buy, latest_sell)
+				avg_buy = perc_diff(stat.avg_buy, latest_sell)
+				best_buy = perc_diff(stat.max_buy, latest_sell)
+				percs_months[months][cur][:sell] =
+					Perc.new(latest_sell, worst_buy, avg_buy, best_buy)
+
+				# buying:
+				latest_buy = stat.latest_buy
+				worst_sell = perc_diff(stat.min_sell, latest_buy)
+				avg_sell = perc_diff(stat.avg_sell, latest_buy)
+				best_sell = perc_diff(stat.max_sell, latest_buy)
+				percs_months[months][cur][:buy] =
+					Perc.new(latest_buy, worst_sell, avg_sell, best_sell)
+			end
+		end
+
+		return percs_months
+	end
+
 	def self.fetch_rates_oer(app_id, db_conn, date)
 		res = Fetching.fetch_historical(app_id, date)
 		base = res['base']
@@ -68,5 +96,11 @@ module Controller
 	def self.fetch_currencies_oer(db_conn)
 		currs = Fetching.fetch_currencies
 		DB.update_currencies(db_conn, currs)
+	end
+
+	private
+
+	def self.perc_diff(a, b)
+		return (a - b) / b * 100
 	end
 end

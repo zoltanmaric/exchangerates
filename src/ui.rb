@@ -46,29 +46,53 @@ module UI
 
 	def self.stats(db_conn)
 		period_stats = Controller.period_stats(db_conn, @@PERIODS_MONTHS)
+		period_percs = Controller.to_percs_months(period_stats)
 		period_stats.each do |months, stats|
-			puts
-			puts "Stats for #{months} month(s):"
-			puts "-" * 82
-			print "Currency | Latest sell | Min sell | "
-			print "Avg sell | "
-			print "Avg buy".ljust(8) + " | "
-			print "Max buy".ljust(8) + " | "
-			puts "Latest sell | "
-			puts "=" * 82
+			print_stats(stats, months)
+			prompt_continue
 
-			stats.each do |cur, stat|
-				print "#{cur}".ljust(8) + " | "
-				print "#{stat.latest_sell.round(6)}".ljust(11) + " | "
-				print "#{stat.min_sell.round(6)}".ljust(8) + " | "
-				print "#{stat.avg_sell.round(6)}".ljust(8) + " | "
-				print "#{stat.avg_buy.round(6)}".ljust(8) + " | "
-				print "#{stat.max_buy.round(6)}".ljust(8) + " | "
-				puts "#{stat.latest_buy.round(6)}".ljust(11) + " |"
-			end
-			puts
-			puts "Press RETURN to continue..."
-			gets
+			percs = period_percs[months]
+			print_percs(percs, months)
+			prompt_continue
+		end
+	end
+
+	def self.print_stats(stats, months)
+		puts
+		puts "Rates for the past #{months} month(s):"
+		puts "-" * 82
+		print "Currency | Latest sell | Min sell | "
+		print "Avg sell | "
+		print "Avg buy".ljust(8) + " | "
+		print "Max buy".ljust(8) + " | "
+		puts "Latest buy |"
+		puts "=" * 82
+
+		stats.each do |cur, stat|
+			print "#{cur}".ljust(8) + " | "
+			print "#{stat.latest_sell.round(6)}".ljust(11) + " | "
+			print "#{stat.min_sell.round(6)}".ljust(8) + " | "
+			print "#{stat.avg_sell.round(6)}".ljust(8) + " | "
+			print "#{stat.avg_buy.round(6)}".ljust(8) + " | "
+			print "#{stat.max_buy.round(6)}".ljust(8) + " | "
+			puts "#{stat.latest_buy.round(6)}".ljust(10) + " |"
+		end
+	end
+
+	def self.print_percs(percs, months)
+		puts "Selling stats for the past #{months} month(s)"
+		puts "-" * 68
+		print "Currency | Latest sell | "
+		print "Worst buy".ljust(11) + " | "
+		print "Avg buy".ljust(11) + " | "
+		puts "Best buy ".ljust(11) + " |"
+		puts "=" * 68
+		percs.each do |cur, perc|
+			print "#{cur}".ljust(8) + " | "
+			print "#{perc[:sell].latest.round(6)}".ljust(11) + " | "
+			print "#{perc[:sell].worst.round(6)}".ljust(11) + " | "
+			print "#{perc[:sell].avg.round(6)}".ljust(11) + " | "
+			puts "#{perc[:sell].best.round(6)}".ljust(11) + " |"
 		end
 	end
 
@@ -90,4 +114,14 @@ module UI
 		Controller.fetch_rates_zaba(
 			db_conn, start_year, start_num, end_year, end_num)
 	end
+
+	def self.prompt_continue
+		puts
+		puts "Press RETURN to continue or q to exit..."
+		resp = gets.chomp
+		if resp == 'q'
+			return
+		end
+	end
+
 end

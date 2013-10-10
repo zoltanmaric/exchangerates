@@ -3,15 +3,19 @@ class Stat
 	attr_reader :latest_sell
 	attr_reader :min_sell
 	attr_reader :avg_sell
+	attr_reader :max_sell
+	attr_reader :min_buy
 	attr_reader :avg_buy
 	attr_reader :max_buy
 	attr_reader :latest_buy
 
 	def initialize(latest_sell, min_sell, avg_sell,
-			avg_buy, max_buy, latest_buy)
+			max_sell, min_buy, avg_buy, max_buy, latest_buy)
 		@latest_sell = latest_sell
 		@min_sell = min_sell
 		@avg_sell = avg_sell
+		@max_sell = max_sell
+		@min_buy = min_buy
 		@avg_buy = avg_buy
 		@max_buy = max_buy
 		@latest_buy = latest_buy
